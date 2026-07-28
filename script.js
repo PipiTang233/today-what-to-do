@@ -219,27 +219,28 @@ function shareResult() {
     ctx.fillText(l, width / 2, startY + i * lineHeight)
   })
 
-  // 7. QR 码
+  // 7. QR 码（异步绘制，完成后显示弹窗）
   const qrSize = 120
   const qrX = (width - qrSize) / 2
   const qrY = startY + lines.length * lineHeight + 20
-  drawQRToCanvas(ctx, siteUrl, qrX, qrY, qrSize)
 
-  // 8. 二维码提示文字
-  ctx.fillStyle = '#636E72'
-  ctx.font = '12px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif'
-  ctx.fillText('总要找点事做吧（吧唧吧唧）', width / 2, qrY + qrSize + 22)
+  drawQRToCanvas(ctx, siteUrl, qrX, qrY, qrSize, function() {
+    // 8. 二维码提示文字
+    ctx.fillStyle = '#636E72'
+    ctx.font = '12px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif'
+    ctx.fillText('总要找点事做吧（吧唧吧唧）', width / 2, qrY + qrSize + 22)
 
-  // 9. 显示弹窗（使用 toDataURL 更兼容）
-  try {
-    const dataUrl = canvas.toDataURL('image/png')
-    $('share-image').src = dataUrl
-    $('share-modal').classList.add('active')
-    console.log('[分享] 分享图生成成功')
-  } catch (e) {
-    console.error('[分享] 生成失败:', e)
-    alert('分享图生成失败，请截图保存')
-  }
+    // 9. 显示弹窗
+    try {
+      const dataUrl = canvas.toDataURL('image/png')
+      $('share-image').src = dataUrl
+      $('share-modal').classList.add('active')
+      console.log('[分享] 分享图生成成功')
+    } catch (e) {
+      console.error('[分享] 生成失败:', e)
+      alert('分享图生成失败，请截图保存')
+    }
+  })
 }
 
 // ======================== 分享弹窗关闭 ========================
@@ -261,34 +262,62 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath()
 }
 
-// Canvas 绘制 QR 码
-function drawQRToCanvas(ctx, text, x, y, size) {
-  try {
-    const qr = qrcode(0, 'M')
-    qr.addData(text)
-    qr.make()
-    const moduleCount = qr.getModuleCount()
-    const cellSize = size / moduleCount
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(x, y, size, size)
-    ctx.fillStyle = '#2D3436'
-    for (let r = 0; r < moduleCount; r++) {
-      for (let c = 0; c < moduleCount; c++) {
-        if (qr.isDark(r, c)) {
-          ctx.fillRect(x + c * cellSize, y + r * cellSize, Math.ceil(cellSize), Math.ceil(cellSize))
+// Canvas 绘制 QR 码（支持异步备选）
+function drawQRToCanvas(ctx, text, x, y, size, callback) {
+  // 尝试用本库生成
+  if (typeof qrcode !== 'undefined') {
+    try {
+      const qr = qrcode(0, 'M')
+      qr.addData(text)
+      qr.make()
+      const moduleCount = qr.getModuleCount()
+      const cellSize = size / moduleCount
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(x, y, size, size)
+      ctx.fillStyle = '#2D3436'
+      for (let r = 0; r < moduleCount; r++) {
+        for (let c = 0; c < moduleCount; c++) {
+          if (qr.isDark(r, c)) {
+            ctx.fillRect(x + c * cellSize, y + r * cellSize, Math.ceil(cellSize), Math.ceil(cellSize))
+          }
         }
       }
+      if (callback) callback()
+      return
+    } catch (e) {
+      console.error('[QR] 库生成失败:', e)
     }
-  } catch (e) {
-    console.error('[QR] 生成失败:', e)
-    // 降级：画一个灰色方块
-    ctx.fillStyle = '#e0e0e0'
-    ctx.fillRect(x, y, size, size)
-    ctx.fillStyle = '#999'
-    ctx.font = '12px sans-serif'
-    ctx.textAlign = 'center'
-    ctx.fillText('QR', x + size/2, y + size/2 + 4)
   }
+
+  // 备选：用在线 API 生成（微信等环境可用）
+  console.log('[QR] 尝试在线API备选')
+  drawQRViaAPI(ctx, text, x, y, size, callback)
+}
+
+function drawQRViaAPI(ctx, text, x, y, size, callback) {
+  var img = new Image()
+  img.onload = function() {
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(x, y, size, size)
+    ctx.drawImage(img, x, y, size, size)
+    if (callback) callback()
+  }
+  img.onerror = function() {
+    console.error('[QR] API备选也失败')
+    drawQRPlaceholder(ctx, x, y, size)
+    if (callback) callback()
+  }
+  // 联图网QR码API（国内可用）
+  img.src = 'http://qr.liantu.com/api.php?text=' + encodeURIComponent(text)
+}
+
+function drawQRPlaceholder(ctx, x, y, size) {
+  ctx.fillStyle = '#e0e0e0'
+  ctx.fillRect(x, y, size, size)
+  ctx.fillStyle = '#999'
+  ctx.font = '12px sans-serif'
+  ctx.textAlign = 'center'
+  ctx.fillText('QR', x + size/2, y + size/2 + 4)
 }
 
 // ======================== 事件绑定 ========================
