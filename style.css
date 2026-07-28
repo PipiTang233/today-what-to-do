@@ -1,0 +1,432 @@
+/* ==================== 基础重置 ==================== */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+  font-size: 16px;
+  color: #2D3436;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: linear-gradient(135deg, #FFE5E5 0%, #FFF3CD 50%, #D4F5E9 100%);
+  background-attachment: fixed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* ==================== App 容器 ==================== */
+#app {
+  width: 100%;
+  max-width: 420px;
+  height: 100vh;
+  max-height: 780px;
+  position: relative;
+  overflow: hidden;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ==================== 页面切换 ==================== */
+.page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+}
+
+.page.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ==================== 首页 ==================== */
+.home-content {
+  text-align: center;
+}
+
+.home-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.home-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #FF6B8A, #FF9F43);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.home-subtitle {
+  font-size: 1rem;
+  color: #636E72;
+  margin-bottom: 40px;
+}
+
+/* ==================== 按钮 ==================== */
+.btn {
+  display: inline-block;
+  border: none;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+  font-family: inherit;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+.btn-primary {
+  padding: 14px 48px;
+  background: linear-gradient(135deg, #FF6B8A, #FF8E53);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(255, 107, 138, 0.4);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(255, 107, 138, 0.5);
+}
+
+.btn-secondary {
+  padding: 12px 32px;
+  background: linear-gradient(135deg, #A66CFF, #6C5CE7);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(166, 108, 255, 0.35);
+}
+
+.btn-ghost {
+  padding: 10px 24px;
+  background: rgba(255, 255, 255, 0.6);
+  color: #636E72;
+  font-size: 0.9rem;
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* ==================== 进度条 ==================== */
+.progress-bar {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  right: 24px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FF6B8A, #FF9F43);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+/* ==================== 答题页 ==================== */
+#page-question {
+  justify-content: center;
+}
+
+.question-card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 24px;
+  padding: 32px 24px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  animation: cardIn 0.4s ease forwards;
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.question-text {
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+/* ==================== 选项 ==================== */
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.option-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s ease;
+  text-align: center;
+  font-family: inherit;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.option-btn:active {
+  transform: scale(0.97);
+}
+
+.option-btn.color-0 {
+  background: #FFF0F0;
+  color: #E17055;
+  border-color: #FFD4D4;
+}
+
+.option-btn.color-1 {
+  background: #FFF8E7;
+  color: #D68A2E;
+  border-color: #FFE8B5;
+}
+
+.option-btn.color-2 {
+  background: #F0F0FF;
+  color: #6C5CE7;
+  border-color: #D4D0FF;
+}
+
+.option-btn.color-3 {
+  background: #E8FFFE;
+  color: #00B894;
+  border-color: #B5FFF8;
+}
+
+.option-btn:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ==================== 结果页 ==================== */
+#page-result {
+  justify-content: center;
+  gap: 24px;
+}
+
+.result-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 24px;
+  padding: 36px 28px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  animation: resultPop 0.5s ease forwards;
+}
+
+@keyframes resultPop {
+  0% { opacity: 0; transform: scale(0.6); }
+  60% { transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.result-emoji {
+  font-size: 4rem;
+  margin-bottom: 16px;
+  animation: emojiBounce 0.6s ease 0.3s both;
+}
+
+@keyframes emojiBounce {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.3); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+.result-name {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #2D3436;
+}
+
+.result-desc {
+  font-size: 0.95rem;
+  color: #636E72;
+  line-height: 1.6;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.result-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.result-actions .btn {
+  width: 100%;
+  max-width: 280px;
+}
+
+/* ==================== 纸屑 ==================== */
+#confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-10px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* ==================== 响应式 ==================== */
+@media (max-width: 480px) {
+  #app {
+    max-height: none;
+    padding: 16px;
+  }
+
+  .home-title {
+    font-size: 1.8rem;
+  }
+
+  .home-icon {
+    font-size: 3rem;
+  }
+
+  .question-card {
+    padding: 24px 18px;
+  }
+
+  .question-text {
+    font-size: 1.15rem;
+  }
+
+  .result-card {
+    padding: 28px 20px;
+  }
+
+  .result-emoji {
+    font-size: 3.2rem;
+  }
+
+  .result-name {
+    font-size: 1.35rem;
+  }
+
+  .result-actions .btn {
+    max-width: 240px;
+    padding: 12px 28px;
+  }
+}
+
+@media (max-height: 600px) {
+  #app {
+    max-height: none;
+  }
+
+  .home-icon {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+  }
+
+  .home-title {
+    font-size: 1.6rem;
+  }
+
+  .home-subtitle {
+    margin-bottom: 24px;
+  }
+}
+
+/* ==================== 加载状态 ==================== */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ==================== 滑动方向 ==================== */
+.page.slide-left {
+  transform: translateX(-30px);
+  opacity: 0;
+}
+
+.page.slide-right {
+  transform: translateX(30px);
+  opacity: 0;
+}
+
+/* ==================== 按钮禁用 ==================== */
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
