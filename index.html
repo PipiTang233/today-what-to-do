@@ -44,6 +44,17 @@
       </div>
     </div>
 
+    <!-- ==================== 分享弹窗 ==================== -->
+    <div id="share-modal" class="share-modal">
+      <div class="share-modal-content">
+        <span class="share-modal-close">&times;</span>
+        <div class="share-modal-body">
+          <img id="share-image" class="share-image" alt="分享图片" src="">
+          <p class="share-modal-hint">长按图片保存，或截图分享给朋友</p>
+        </div>
+      </div>
+    </div>
+
     <!-- ==================== 分享画布（隐藏，截图用） ==================== -->
     <canvas id="share-canvas" style="display:none"></canvas>
   </div>
@@ -51,7 +62,7 @@
   <!-- ==================== 纸屑容器 ==================== -->
   <div id="confetti-container"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script src="qrcode-lib.js"></script>
   <script src="data.js"></script>
   <script src="script.js"></script>
 </body>

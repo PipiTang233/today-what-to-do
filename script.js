@@ -156,7 +156,7 @@ function fireConfetti() {
 // ======================== QR二维码生成 ========================
 // 使用 qrcode-generator 库（从 CDN 加载）
 function generateQRMatrix(text) {
-  const qr = QRCode(0, 'M')
+  const qr = qrcode(0, 'M')
   qr.addData(text)
   qr.make()
   const size = qr.getModuleCount()
@@ -172,7 +172,7 @@ function generateQRMatrix(text) {
 }
 
 // ======================== 分享截图 ========================
-async function shareResult() {
+function shareResult() {
   const a = state.currentActivity
   const siteUrl = window.location.href.includes('file://')
     ? 'https://pipitang233.github.io/today-what-to-do'
@@ -247,26 +247,17 @@ async function shareResult() {
   ctx.font = '12px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif'
   ctx.fillText('总要找点事做吧（吧唧吧唧）', width / 2, qrY + qrSize + 22)
 
-  // 9. 下载 / 分享
-  canvas.toBlob(async (blob) => {
-    // 尝试 Web Share API（移动端）
-    if (navigator.share && navigator.canShare({ files: [new File([blob], 'today.png', { type: 'image/png' })] })) {
-      try {
-        await navigator.share({
-          title: '今天我想做什么',
-          files: [new File([blob], 'today.png', { type: 'image/png' })],
-        })
-        return
-      } catch (e) { /* user cancelled or fallback */ }
-    }
-    // 降级：下载图片
+  // 9. 显示弹窗
+  canvas.toBlob((blob) => {
     const url = URL.createObjectURL(blob)
-    const aEl = document.createElement('a')
-    aEl.href = url
-    aEl.download = '今天我想做什么.png'
-    aEl.click()
-    URL.revokeObjectURL(url)
+    $('share-image').src = url
+    $('share-modal').classList.add('active')
   }, 'image/png')
+}
+
+// ======================== 分享弹窗关闭 ========================
+function closeShareModal() {
+  $('share-modal').classList.remove('active')
 }
 
 // Canvas 圆角矩形辅助
@@ -304,6 +295,14 @@ $('btn-start').addEventListener('click', startQuiz)
 $('btn-retry').addEventListener('click', tryAgain)
 $('btn-restart').addEventListener('click', restart)
 $('btn-share').addEventListener('click', shareResult)
+
+// 分享弹窗关闭
+const modal = $('share-modal')
+modal.addEventListener('click', closeShareModal)
+modal.querySelector('.share-modal-content')
+  .addEventListener('click', (e) => e.stopPropagation())
+modal.querySelector('.share-modal-close')
+  .addEventListener('click', closeShareModal)
 
 // ======================== 键盘快捷键 ========================
 document.addEventListener('keydown', (e) => {
