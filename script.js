@@ -154,140 +154,21 @@ function fireConfetti() {
 }
 
 // ======================== QR二维码生成 ========================
-// 基于 ISO/IEC 18004 的简化实现
-const QR = {
-  // GF(256) 运算表
-  _gf256: (function() {
-    const exp = new Array(256), log = new Array(256)
-    for (let i = 0, v = 1; i < 256; i++) {
-      exp[i] = v
-      log[v] = i
-      v = v * 2 ^ (v >= 128 ? 0x11d : 0)
+// 使用 qrcode-generator 库（从 CDN 加载）
+function generateQRMatrix(text) {
+  const qr = QRCode(0, 'M')
+  qr.addData(text)
+  qr.make()
+  const size = qr.getModuleCount()
+  const matrix = []
+  for (let r = 0; r < size; r++) {
+    const row = []
+    for (let c = 0; c < size; c++) {
+      row.push(qr.isDark(r, c) ? 1 : 0)
     }
-    return { exp, log }
-  })(),
-
-  // 生成纠错码多项式
-  _genPoly(n) {
-    let poly = [1]
-    for (let i = 0; i < n; i++) {
-      poly = this._mulPoly(poly, [1, this._gf256.exp[i]])
-    }
-    return poly
-  },
-
-  _mulPoly(a, b) {
-    const res = new Array(a.length + b.length - 1).fill(0)
-    for (let i = 0; i < a.length; i++) {
-      for (let j = 0; j < b.length; j++) {
-        if (a[i] && b[j]) {
-          res[i + j] ^= this._gf256.exp[(this._gf256.log[a[i]] + this._gf256.log[b[j]]) % 255]
-        }
-      }
-    }
-    return res
-  },
-
-  // 计算纠错码
-  _encodeECC(data, eccCount) {
-    const gen = this._genPoly(eccCount)
-    const remainder = data.slice()
-    for (let i = 0; i < data.length; i++) {
-      if (remainder[i]) {
-        const factor = this._gf256.log[remainder[i]]
-        for (let j = 0; j < gen.length; j++) {
-          remainder[i + j] ^= this._gf256.exp[(factor + this._gf256.log[gen[j]]) % 255]
-        }
-      }
-    }
-    return remainder.slice(data.length)
-  },
-
-  // 生成版本2, M 纠错等级的 QR 码矩阵 (25x25)
-  // 最大可容纳 20 字节数据
-  generate(text) {
-    // 1. 数据编码 (byte mode)
-    const data = [64 | (text.length & 0xff)] // mode: byte, length
-    for (let i = 0; i < text.length; i++) {
-      const c = text.charCodeAt(i)
-      data.push(c > 127 ? 0x3f : c) // 非ASCII替换为?
-    }
-    // 补齐到 16 字节 (version 2-M 的数据容量)
-    while (data.length < 16) data.push(0xec) // 填充码
-    while (data.length < 16) data.push(0x11)
-
-    // 2. 纠错码 (M 级需要 16 个纠错码字)
-    const ecc = this._encodeECC(data, 16)
-
-    // 3. 合并
-    const allData = data.concat(ecc)
-
-    // 4. 构建矩阵 (25x25)
-    const size = 25
-    const matrix = Array.from({ length: size }, () => new Array(size).fill(0))
-
-    // 功能图案
-    // Finder pattern (定位图案) - 3个角
-    const drawFinder = (row, col) => {
-      for (let r = -1; r <= 7; r++) {
-        for (let c = -1; c <= 7; c++) {
-          const x = col + c, y = row + r
-          if (x < 0 || x >= size || y < 0 || y >= size) continue
-          if (r >= 0 && r <= 6 && c >= 0 && c <= 6) {
-            const isOuter = r === 0 || r === 6 || c === 0 || c === 6
-            const isInner = r >= 2 && r <= 4 && c >= 2 && c <= 4
-            matrix[y][x] = (isOuter || isInner) ? 1 : 0
-          } else {
-            matrix[y][x] = 0 // 分隔符
-          }
-        }
-      }
-    }
-    drawFinder(0, 0)
-    drawFinder(0, size - 7)
-    drawFinder(size - 7, 0)
-
-    // Timing patterns (时钟图案)
-    for (let i = 8; i < size - 8; i++) {
-      matrix[6][i] = i % 2 === 0 ? 1 : 0
-      matrix[i][6] = i % 2 === 0 ? 1 : 0
-    }
-
-    // Dark module (暗模块)
-    matrix[size - 8][8] = 1
-
-    // Format info area (预留)
-    const formatBits = [0,1,1,1,1,0,1,1,0,0,0,1,0,0,1] // M mask 0
-    const fi = formatBits
-    for (let i = 0; i <= 5; i++) { matrix[8][i] = fi[i]; matrix[i][8] = fi[fi.length-1-i] }
-    for (let i = 7; i <= 8; i++) { matrix[8][i] = fi[i-1]; matrix[i][8] = fi[fi.length-1-(i-1)] }
-    for (let i = 9; i <= 14; i++) { matrix[8][i] = fi[i-2] }
-    matrix[8][size-8] = fi[7]; matrix[size-8][8] = fi[7]
-    for (let i = size-7; i < size; i++) { matrix[8][i] = fi[i-(size-9)] }
-    matrix[7][8] = fi[size-9+1]; matrix[8][7] = fi[size-9+1]
-    for (let i = size-7; i < size; i++) { matrix[i][8] = fi[i-(size-9)] }
-
-    // 5. 放置数据
-    let dataIdx = 0
-    let bitIdx = 7
-    for (let col = size - 1; col > 0; col -= 2) {
-      if (col === 6) col = 5 // Skip timing
-      for (let row = 0; row < size; row++) {
-        for (const c of [col, col - 1]) {
-          if (c < 0 || c >= size) continue
-          const r = (col % 4 === 0) ? (size - 1 - row) : row
-          if (matrix[r][c] !== 0) continue // skip functional patterns
-          if (dataIdx < allData.length) {
-            matrix[r][c] = (allData[dataIdx] >> bitIdx) & 1
-            bitIdx--
-            if (bitIdx < 0) { bitIdx = 7; dataIdx++ }
-          }
-        }
-      }
-    }
-
-    return matrix
+    matrix.push(row)
   }
+  return matrix
 }
 
 // ======================== 分享截图 ========================
@@ -404,7 +285,7 @@ function roundRect(ctx, x, y, w, h, r) {
 
 // Canvas 绘制 QR 码
 function drawQRToCanvas(ctx, text, x, y, size) {
-  const matrix = QR.generate(text)
+  const matrix = generateQRMatrix(text)
   const cellSize = size / matrix.length
   ctx.fillStyle = '#ffffff'
   ctx.fillRect(x, y, size, size)
