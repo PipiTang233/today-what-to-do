@@ -153,30 +153,13 @@ function fireConfetti() {
   setTimeout(() => { container.innerHTML = '' }, 4000)
 }
 
-// ======================== QR二维码生成 ========================
-// 使用 qrcode-generator 库（从 CDN 加载）
-function generateQRMatrix(text) {
-  const qr = qrcode(0, 'M')
-  qr.addData(text)
-  qr.make()
-  const size = qr.getModuleCount()
-  const matrix = []
-  for (let r = 0; r < size; r++) {
-    const row = []
-    for (let c = 0; c < size; c++) {
-      row.push(qr.isDark(r, c) ? 1 : 0)
-    }
-    matrix.push(row)
-  }
-  return matrix
-}
-
 // ======================== 分享截图 ========================
 function shareResult() {
   const a = state.currentActivity
   const siteUrl = window.location.href.includes('file://')
     ? 'https://pipitang233.github.io/today-what-to-do'
     : window.location.origin + window.location.pathname.replace(/\/$/, '')
+  console.log('[分享] 开始生成分享图, URL:', siteUrl)
 
   const canvas = $('share-canvas')
   const width = 400, height = 560
@@ -247,12 +230,16 @@ function shareResult() {
   ctx.font = '12px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif'
   ctx.fillText('总要找点事做吧（吧唧吧唧）', width / 2, qrY + qrSize + 22)
 
-  // 9. 显示弹窗
-  canvas.toBlob((blob) => {
-    const url = URL.createObjectURL(blob)
-    $('share-image').src = url
+  // 9. 显示弹窗（使用 toDataURL 更兼容）
+  try {
+    const dataUrl = canvas.toDataURL('image/png')
+    $('share-image').src = dataUrl
     $('share-modal').classList.add('active')
-  }, 'image/png')
+    console.log('[分享] 分享图生成成功')
+  } catch (e) {
+    console.error('[分享] 生成失败:', e)
+    alert('分享图生成失败，请截图保存')
+  }
 }
 
 // ======================== 分享弹窗关闭 ========================
@@ -276,17 +263,31 @@ function roundRect(ctx, x, y, w, h, r) {
 
 // Canvas 绘制 QR 码
 function drawQRToCanvas(ctx, text, x, y, size) {
-  const matrix = generateQRMatrix(text)
-  const cellSize = size / matrix.length
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(x, y, size, size)
-  ctx.fillStyle = '#2D3436'
-  for (let r = 0; r < matrix.length; r++) {
-    for (let c = 0; c < matrix[r].length; c++) {
-      if (matrix[r][c]) {
-        ctx.fillRect(x + c * cellSize, y + r * cellSize, Math.ceil(cellSize), Math.ceil(cellSize))
+  try {
+    const qr = qrcode(0, 'M')
+    qr.addData(text)
+    qr.make()
+    const moduleCount = qr.getModuleCount()
+    const cellSize = size / moduleCount
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(x, y, size, size)
+    ctx.fillStyle = '#2D3436'
+    for (let r = 0; r < moduleCount; r++) {
+      for (let c = 0; c < moduleCount; c++) {
+        if (qr.isDark(r, c)) {
+          ctx.fillRect(x + c * cellSize, y + r * cellSize, Math.ceil(cellSize), Math.ceil(cellSize))
+        }
       }
     }
+  } catch (e) {
+    console.error('[QR] 生成失败:', e)
+    // 降级：画一个灰色方块
+    ctx.fillStyle = '#e0e0e0'
+    ctx.fillRect(x, y, size, size)
+    ctx.fillStyle = '#999'
+    ctx.font = '12px sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText('QR', x + size/2, y + size/2 + 4)
   }
 }
 
