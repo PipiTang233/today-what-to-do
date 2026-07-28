@@ -294,7 +294,7 @@ const QR = {
 async function shareResult() {
   const a = state.currentActivity
   const siteUrl = window.location.href.includes('file://')
-    ? 'https://ni-de-yong-hu.github.io/jin-tian-xiang-zuo-shi-me'
+    ? 'https://pipitang233.github.io/today-what-to-do'
     : window.location.origin + window.location.pathname.replace(/\/$/, '')
 
   const canvas = $('share-canvas')
